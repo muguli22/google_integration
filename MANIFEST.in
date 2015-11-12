@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include google_integration *.css
+recursive-include google_integration *.csv
+recursive-include google_integration *.html
+recursive-include google_integration *.ico
+recursive-include google_integration *.js
+recursive-include google_integration *.json
+recursive-include google_integration *.md
+recursive-include google_integration *.png
+recursive-include google_integration *.py
+recursive-include google_integration *.svg
+recursive-include google_integration *.txt
+recursive-exclude google_integration *.pyc
