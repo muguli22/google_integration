@@ -66,13 +66,12 @@ app_version = "0.0.1"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
+doc_events = {
+	"Event": {
+		"on_update": "google_integration.google_calendar.update_gcal_event",
+		"on_trash": "google_integration.google_calendar.delete_gcal_event"
+	}
+}
 
 # Scheduled Tasks
 # ---------------
