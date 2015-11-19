@@ -11,103 +11,6 @@ from oauth2client.keyring_storage import Storage
 from google_integration.utils import get_credentials, get_service_object
 import json
 
-@frappe.whitelist()
-def sync_google_calendar(user):
-
-	credentials = get_credentials(user)
-	
-	eventsResult = get_gcal_events(credentials)
-	events = eventsResult.get('items', [])
-
-	if not events:
-		frappe.msgprint("No Events to Sync")
-	else:		
-		for event in events:
-			# check if event alreay synced if exist update else create new event
-			existing_event_name = is_existing_event(event)
-			if existing_event_name:
-				update_event(existing_event_name, event)
-			else:
-				create_event(event)
-
-def get_gcal_events(credentials):
-	now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-	service = build('calendar', 'v3', http=credentials.authorize(Http()))
-	eventsResult = service.events().list(
-		calendarId='primary', timeMin=now).execute()
-	events = eventsResult.get('items', [])
-	return eventsResult
-
-def create_event(event):
-	e = frappe.new_doc("Event")
-	e = set_values(e, event)
-	e.save(ignore_permissions=True)
-
-def update_event(name, event):
-	e = frappe.get_doc("Event", name)
-
-	if e.modified != get_formatted_updated_date(event['updated']):
-		e = set_values(e, event)
-		e.save(ignore_permissions=True)
-
-def set_values(doc, event):
-	# frappe.errprint(event)
-	doc.subject = event.get('summary')
-
-	start_date = event['start'].get('dateTime', event['start'].get('date'))
-	end_date = event['end'].get('dateTime', event['start'].get('date'))
-			
-	doc.starts_on = get_formatted_date(start_date)
-	doc.ends_on = get_formatted_date(end_date)
-
-	if not event['end'].get('dateTime'):
-		doc.all_day = 1 
-	else:
-		doc.all_day = 0
-
-	if not event.get('visibility'):
-		doc.event_type = "Private"
-	else:
-		doc.event_type =  "Private" if event['visibility'] == "private" else "Public"
-		
-	doc.description = event.get("description")
-	doc.is_gcal_event = 1
-	doc.event_owner = event.get("organizer").get("email")
-	doc.google_event_id = event.get("id")
-	add_attendees(doc, event)
-
-	return doc
-
-def add_attendees(doc, event):
-	att = []
-	event_attendees = ""
-	if event.get("attendees"):
-		for attendee in event.get("attendees"):
-
-			att.append({"email": attendee.get("email")})
-			event_attendees += "%s : %s \n"%(attendee.get("displayName") or "Name", attendee.get("email"))
-	
-	if not doc.get("roles"):
-		doc.set("roles",[])
-	
-	if att:
-		ch = doc.append('roles', {})
-		ch.attendees = str(att)
-		ch.event_attendees = str(event_attendees)
-
-def get_formatted_date(str_date):
-	# remove timezone from str_date
-	import dateutil.parser
-	return dateutil.parser.parse(str_date).strftime("%Y-%m-%d %H:%M:%S")
-
-def is_existing_event(event):
-	name = frappe.db.get_value("Event",{"google_event_id":event.get("id")},"name")
-	return name
-
-def get_formatted_updated_date(str_date):
-	""" converting 2015-08-21T13:11:39.335Z string date to datetime """
-	return datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%S.%fZ")
-
 def update_gcal_event(doc, method):
 	# check if event newly created or updated
 	event = None
@@ -146,7 +49,8 @@ def delete_gcal_event(doc, method):
 			frappe.local.response["location"] = "/desk#List/Event"
 
 def get_google_event_dict(doc):
-	start_date, end_date = get_gcal_date(doc.starts_on, doc.ends_on, doc.all_day)
+	""" return event dict """
+	start_date, end_date = get_formated_event_dates(doc.starts_on, doc.ends_on, doc.all_day)
 	event = {
 		"summary": doc.subject,
 		"location": None,
@@ -164,7 +68,8 @@ def get_google_event_dict(doc):
 	}
 	return event
 
-def get_gcal_date(starts_on, ends_on=None, is_all_day=0):
+def get_formated_event_dates(starts_on, ends_on=None, is_all_day=0):
+	""" return formated event date """
 	gcal_date = {}
 	gcal_starts_on = get_dates_in_gcal_format(starts_on, is_all_day)
 	gcal_ends_on = get_dates_in_gcal_format(ends_on if ends_on else starts_on, is_all_day)
@@ -172,6 +77,7 @@ def get_gcal_date(starts_on, ends_on=None, is_all_day=0):
 	return gcal_starts_on, gcal_ends_on
 
 def get_dates_in_gcal_format(date, is_all_day=0):
+	"""returns date and timezone dict to create google event"""
 	str_date = str(date) if isinstance(date, datetime) else date
 	
 	if is_all_day:
@@ -187,7 +93,8 @@ def get_dates_in_gcal_format(date, is_all_day=0):
 		else:
 			frappe.msgprint("Please set Time Zone under Setup > Settings > System Settings", raise_exception=1)
 
-def get_attendees(doc):	
+def get_attendees(doc):
+	"""return attendees including all users for specified roles and attendees"""
 	emails = []
 	if doc.roles:
 		roles, attendees = [], []
@@ -212,32 +119,72 @@ def get_attendees(doc):
 	return emails
 
 def get_recurrence_rule(doc):
-	"""Recurring Event not implemeted."""
+	"""return recurring rule based on repeat on"""
 		
 	if doc.repeat_on == "Every Day": 
-		rule = ["RRULE:FREQ=DAILY;BYDAY=%s"%(get_by_day_string(doc))]
+		rule = get_daily_rule(doc)
 		
 	elif doc.repeat_on == "Every Week": 
-		rule = ["RRULE:FREQ=WEEKLY"]
+		rule = get_weekly_rule(doc)
+		
 	elif doc.repeat_on == "Every Month": 
 		rule = ["RRULE:FREQ=MONTHLY"]
+		
 	else: 
-		rule = ["RRULE:FREQ=YEARLY;UNTIL=%s"%(until)]
+		rule = ["RRULE:FREQ=YEARLY"]
 	
+	return add_end_term_for_recurring_event(rule, doc)
+
+def get_daily_rule(doc):
+	"""Return daily rule for recurring event"""
+	byday = get_byday(doc)
+	
+	if byday:
+		return ["RRULE:FREQ=DAILY;BYDAY=%s"%(byday)]
+	else:
+		return ["RRULE:FREQ=DAILY"]
+
+def get_byday(doc):
+	from frappe.utils import get_datetime
+	"""return day short name"""
+	
+	if doc.repeat_on == "Every Day": 
+		by_days = []
+
+		if doc.monday : by_days.append(get_day_short_name(index=0))
+		if doc.tuesday : by_days.append(get_day_short_name(index=1))
+		if doc.wednesday : by_days.append(get_day_short_name(index=2))
+		if doc.thursday : by_days.append(get_day_short_name(index=3))
+		if doc.friday : by_days.append(get_day_short_name(index=4))
+		if doc.saturday : by_days.append(get_day_short_name(index=5))
+		if doc.sunday : by_days.append(get_day_short_name(index=6))
+
+		return "%s" % ",".join(by_days)
+	
+	else:
+		return get_day_short_name(day=get_datetime(doc.starts_on).strftime("%A"))
+		
+def add_end_term_for_recurring_event(rule, doc):
+	""" return rule by adding end date"""
 	if doc.repeat_till:
 		until = datetime.strptime(doc.repeat_till, '%Y-%m-%d').strftime("%Y%m%dT%H%M%SZ")
+		frappe.errprint([rule])
 		rule = ["%s;UNTIL=%s"%(rule[0],until)]
-		
-	return rule
 	
-def get_by_day_string(doc):
-	by_days = []
-	if doc.sunday : by_days.append("SU")
-	if doc.monday : by_days.append("MO")
-	if doc.tuesday : by_days.append("TU")
-	if doc.wednesday : by_days.append("WE")
-	if doc.thursday : by_days.append("TH")
-	if doc.friday : by_days.append("FR")
-	if doc.saturday : by_days.append("SA")
+	return rule
 
-	return "%s" % ",".join(by_days)
+def get_weekly_rule(doc):
+	return ["RRULE:FREQ=WEEKLY;BYDAY=%s"%get_byday(doc)]
+
+def get_day_short_name(day=None, index=None):
+	"""return day short name"""
+	import calendar
+	
+	day_dict = {"Monday": "MO", "Tuesday":"TU", "Wednesday":"WE", "Thursday": "TH", 
+		"Friday": "FR", "Saturday": "SA", "Sunday": "SU"}
+	
+	if day:
+		return day_dict[day]
+	
+	if index==0 or index:
+		return day_dict[calendar.day_name[index]]

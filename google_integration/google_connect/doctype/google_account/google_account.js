@@ -26,7 +26,7 @@ frappe.ui.form.on("Google Account", "refresh", function(frm){
 
 sync_calendar = function() {
 	frappe.call({
-		method: "google_integration.google_calendar.sync_google_calendar",
+		method: "google_integration.fetch_google_calendar.sync_google_calendar",
 		args:{"user": user},
 		freeze: true,
 		callback: function(r){
