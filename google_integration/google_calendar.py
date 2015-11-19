@@ -110,7 +110,6 @@ def get_formatted_updated_date(str_date):
 
 def update_gcal_event(doc, method):
 	# check if event newly created or updated
-	print doc, method
 	event = None
 	service = get_service_object(frappe.session.user)
 
@@ -127,7 +126,7 @@ def update_gcal_event(doc, method):
 		event = service.events().insert(calendarId='primary', body=event).execute()
 
 		if event:
-			doc.google_event_id = event.get("id")
+			frappe.db.set_value("Event", doc.name, "google_event_id", event.get("id"))
 			frappe.msgprint("New Google Calender Event is created successfully")
 
 def delete_gcal_event(doc, method):
@@ -211,3 +210,34 @@ def get_attendees(doc):
 			emails.extend(attendees)
 
 	return emails
+
+def get_recurrence_rule(doc):
+	"""Recurring Event not implemeted."""
+		
+	if doc.repeat_on == "Every Day": 
+		rule = ["RRULE:FREQ=DAILY;BYDAY=%s"%(get_by_day_string(doc))]
+		
+	elif doc.repeat_on == "Every Week": 
+		rule = ["RRULE:FREQ=WEEKLY"]
+	elif doc.repeat_on == "Every Month": 
+		rule = ["RRULE:FREQ=MONTHLY"]
+	else: 
+		rule = ["RRULE:FREQ=YEARLY;UNTIL=%s"%(until)]
+	
+	if doc.repeat_till:
+		until = datetime.strptime(doc.repeat_till, '%Y-%m-%d').strftime("%Y%m%dT%H%M%SZ")
+		rule = ["%s;UNTIL=%s"%(rule[0],until)]
+		
+	return rule
+	
+def get_by_day_string(doc):
+	by_days = []
+	if doc.sunday : by_days.append("SU")
+	if doc.monday : by_days.append("MO")
+	if doc.tuesday : by_days.append("TU")
+	if doc.wednesday : by_days.append("WE")
+	if doc.thursday : by_days.append("TH")
+	if doc.friday : by_days.append("FR")
+	if doc.saturday : by_days.append("SA")
+
+	return "%s" % ",".join(by_days)

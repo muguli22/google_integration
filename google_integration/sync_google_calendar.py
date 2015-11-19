@@ -8,7 +8,6 @@ from httplib2 import Http
 import oauth2client
 from oauth2client.client import Credentials
 from oauth2client.keyring_storage import Storage
-from gcal.gcal_sync.doctype.sync_configuration.sync_configuration import sync_calender
 
 def get_service_object():
 	# get google credentials from storage
@@ -126,26 +125,3 @@ def get_attendees(doc):
 			email_ids.extend(attendees)
 
 	return email_ids
-
-def get_recurrence_rule(doc):
-	"""Recurring Event not implemeted."""
-	# until = datetime.strptime(doc.repeat_till, '%Y-%m-%d').strftime("%Y%m%dT%H%M%SZ")
-
-	# if doc.repeat_on == "Every Day": return ["RRULE:FREQ=DAILY;UNTIL=%s;BYDAY=%s"%(until,get_by_day_string(doc))]
-	# elif doc.repeat_on == "Every Week": return ["RRULE:FREQ=WEEKLY;UNTIL=%s"%(until)]
-	# elif doc.repeat_on == "Every Month": return ["RRULE:FREQ=MONTHLY;UNTIL=%s"%(until)]
-	# else: return ["RRULE:FREQ=YEARLY;UNTIL=%s"%(until)]
-	return []
-
-# def get_by_day_string(doc):
-# 	# days = ["SU","MO","TU","WE","TH","FR","SA"]
-# 	by_days = []
-# 	if doc.sunday : by_days.append("SU")
-# 	if doc.monday : by_days.append("MO")
-# 	if doc.tuesday : by_days.append("TU")
-# 	if doc.wednesday : by_days.append("WE")
-# 	if doc.thursday : by_days.append("TH")
-# 	if doc.friday : by_days.append("FR")
-# 	if doc.saturday : by_days.append("SA")
-
-# 	return "%s" % ",".join(by_days)

@@ -65,7 +65,7 @@ app_version = "0.0.1"
 # Document Events
 # ---------------
 # Hook on document methods and events
-
+#
 doc_events = {
 	"Event": {
 		"on_update": "google_integration.google_calendar.update_gcal_event",
