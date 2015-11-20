@@ -8,45 +8,6 @@ from httplib2 import Http
 import oauth2client
 from oauth2client.client import Credentials
 from oauth2client.keyring_storage import Storage
-
-def sync_all():
-	# get the list of user with
-	users = get_users_by_sync_optios('Hourly')
-	sych_users_calender(users)
-
-def sync_hourly():
-	# get the list of user having sync option as "hourly"
-	users = get_users_by_sync_optios('Hourly')
-	sych_users_calender(users)
-
-def sync_daily():
-	# get the list of user having sync option as "Daily"
-	users = get_users_by_sync_optios('Daily')
-	sych_users_calender(users)
-
-def sync_weekly():
-	# get the list of user having sync option as "Weekly"
-	users = get_users_by_sync_optios('Weekly')
-	sych_users_calender(users)
-
-def sync_monthly():
-	# get the list of user having sync option as "Monthly"
-	users = get_users_by_sync_optios('Monthly')
-	sych_users_calender(users)
-
-def get_users_by_sync_optios(mode):
-	return frappe.db.sql("select gmail_id from `tabSync Configuration` where is_sync=1 and sync_options='%s'"%(mode),as_list=True)
-
-def sych_users_calender(users):
-	for user in users:
-		# get user credentials from keyring storage
-		store = Storage('GCal', user[0])
-		credentials = store.get()
-		if not credentials or credentials.invalid:
-			# invalid credentials
-			print "invalid credentials", user[0]
-		else:
-			sync_google_calendar(credentials)
 			
 def get_credentials(user):
 	store = Storage('Google Account', user)
@@ -65,3 +26,18 @@ def get_service_object(user):
 		service = build('calendar', 'v3', http=credentials.authorize(Http()))
 
 	return service
+
+def get_rule_dict(recurring_rule):
+	""" 
+		get rule dict for google calendar recurring rule
+		eg: recurring_rule = RRULE:FREQ=DAILY;COUNT=5
+		o/p : {'FREQ': 'DAILY', 'COUNT': 5}
+	"""
+	rule_dict = {}
+	rule_details = recurring_rule[6:].split(';')
+	
+	for param in rule_details:
+		temp_list = param.split("=")
+		rule_dict[temp_list[0]] = temp_list[1]
+	
+	return rule_dict

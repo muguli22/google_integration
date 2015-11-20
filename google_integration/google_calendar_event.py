@@ -108,8 +108,9 @@ def get_attendees(doc):
 		if roles:
 			condition = "('%s')" % "','".join(tuple(roles))
 
-			result_set = frappe.db.sql("""SELECT DISTINCT email FROM tabUser WHERE name <> '%s' AND name IN
-				(SELECT DISTINCT parent FROM tabUserRole WHERE role in %s)"""%(frappe.session.user, condition), as_dict=True)
+			result_set = frappe.db.sql("""select distinct parent from tabUserRole 
+				where parent not in('Guest', 'Administrator', '%s') 
+					and role in %s""", (frappe.session.user, condition), as_dict=True)
 
 			emails = result_set if result_set else []
 
@@ -168,7 +169,6 @@ def add_end_term_for_recurring_event(rule, doc):
 	""" return rule by adding end date"""
 	if doc.repeat_till:
 		until = datetime.strptime(doc.repeat_till, '%Y-%m-%d').strftime("%Y%m%dT%H%M%SZ")
-		frappe.errprint([rule])
 		rule = ["%s;UNTIL=%s"%(rule[0],until)]
 	
 	return rule

@@ -8,8 +8,9 @@ from httplib2 import Http
 import oauth2client
 from oauth2client.client import Credentials
 from oauth2client.keyring_storage import Storage
-from google_integration.utils import get_credentials, get_service_object
-import json
+from google_integration.utils import get_credentials, get_service_object, get_rule_dict
+from frappe.utils import cint, get_datetime
+from dateutil.relativedelta import relativedelta
 
 @frappe.whitelist()
 def sync_google_calendar(user):
@@ -23,7 +24,6 @@ def sync_google_calendar(user):
 		frappe.msgprint("No Events to Sync")
 	else:		
 		for event in events:
-			check if event alreay synced if exist update else create new event
 			existing_event_name = is_existing_event(event)
 			if existing_event_name:
 				update_event(existing_event_name, event)
@@ -49,7 +49,7 @@ def update_event(name, event):
 
 	if e.modified != get_formatted_updated_date(event['updated']):
 		e = set_values(e, event)
-		e.save(ignore_permissions=True)
+		# e.save(ignore_permissions=True)
 
 def set_values(doc, event):
 	"""create event dict from google event """
@@ -76,6 +76,10 @@ def set_values(doc, event):
 	doc.event_owner = event.get("organizer").get("email")
 	doc.google_event_id = event.get("id")
 	add_attendees(doc, event)
+	
+	if event.get("recurrence"):
+		doc.repeat_this_event = 1
+		setup_recurring_event(doc, event.get("recurrence")[0])
 
 	return doc
 
@@ -110,4 +114,65 @@ def is_existing_event(event):
 def get_formatted_updated_date(str_date):
 	""" converting 2015-08-21T13:11:39.335Z string date to datetime """
 	return datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%S.%fZ")
+
+def setup_recurring_event(doc, recurring_rule):
+	rule_dict = get_rule_dict(recurring_rule)
+	frappe.errprint(rule_dict)
+	if rule_dict['FREQ'] == "DAILY":
+		setup_daily_rule(doc, rule_dict)
+	
+	if rule_dict['FREQ'] == "WEEKLY":
+		setup_weekly_rule(doc, rule_dict)
 		
+	if rule_dict['FREQ'] == "MONTHLY":
+		setup_monthly_rule(doc, rule_dict)
+	
+	if rule_dict['FREQ'] == "YEARLY":
+		setup_yearly_rule(doc, rule_dict)
+	
+	set_repeat_till_date(doc, until=rule_dict.get("UNTIL"), count=cint(rule_dict.get("COUNT")), 
+		event_type=rule_dict['FREQ'])
+
+def setup_daily_rule(doc, rule_dict):
+	count = cint(rule_dict.get("COUNT"), 7)
+	doc.repeat_on = "Every Day"
+	
+	day_list = []
+	if count >= 7:
+		set_recurring_day(doc, ['monday', 'tuesday', 'wednesday', 
+			'thursday', 'friday', 'saturday', 'sunday'])
+		
+	else:
+		for i in range(0, cint(rule_dict.get("COUNT"))):
+			next_day = get_datetime(doc.starts_on) + timedelta(days=i)
+			day_list.append(next_day.strftime("%A").lower())
+			
+		set_recurring_day(doc, day_list)
+		
+def set_recurring_day(doc, day_list):
+	for day in day_list:
+		doc.set(day,1)
+		
+def setup_weekly_rule(doc, rule_dict):
+	doc.repeat_on = "Every Week"
+	
+def setup_monthly_rule(doc, rule_dict):
+	doc.repeat_on = "Every Month"
+	
+def setup_yearly_rule(doc, rule_dict):
+	doc.repeat_on = "Every Year"
+
+def set_repeat_till_date(doc, until=None, count=0, event_type="DAILY"):
+	relativedelta_dict = {
+		"DAILY": relativedelta(days=(count-1)),
+		"WEEKLY": relativedelta(weeks=(count-1)),
+		"MONTHLY": relativedelta(months=(count-1)),
+		"YEARLY": relativedelta(years=(count-1))
+	}
+	
+	if until:
+		doc.repeat_till = datetime.strptime(until, "%Y%m%dT%H%M%SZ")
+		
+	if count:
+		doc.repeat_till = get_datetime(doc.starts_on)+ relativedelta_dict[event_type]
+	

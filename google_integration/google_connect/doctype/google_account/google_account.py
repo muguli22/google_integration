@@ -34,7 +34,7 @@ oauth2_providers = {
 		"auth_url_data": {
 			# "approval_prompt":"force",
 			'access_type': 'offline',
-			"scope": 'https://www.googleapis.com/auth/calendar',
+			"scope": ['https://www.googleapis.com/auth/calendar','https://www.google.com/m8/feeds'],
 			"response_type": "code"
 		},
 
