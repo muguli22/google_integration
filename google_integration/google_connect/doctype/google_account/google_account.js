@@ -38,5 +38,14 @@ sync_calendar = function() {
 }
 
 sync_contact = function() {
-	alert("contact")
+	frappe.call({
+		method: "google_integration.fetch_contact.sync_google_contact",
+		args:{"user": user},
+		freeze: true,
+		callback: function(r){
+			if(!r.exc) {
+				frappe.msgprint(__("Contact(s) has been synced"))
+			}
+		}
+	})
 }

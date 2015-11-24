@@ -12,6 +12,7 @@ from google_integration.utils import get_credentials, get_service_object
 import json
 
 def update_gcal_event(doc, method):
+	"""triggered by hook, on event update"""
 	# check if event newly created or updated
 	event = None
 	service = get_service_object(frappe.session.user)
@@ -33,6 +34,7 @@ def update_gcal_event(doc, method):
 			frappe.msgprint("New Google Calender Event is created successfully")
 
 def delete_gcal_event(doc, method):
+	"""triggered by hooks, at event deletion"""
 	service = get_service_object(frappe.session.user)
 	if doc.google_event_id:
 		try:

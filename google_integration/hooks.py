@@ -8,7 +8,7 @@ app_description = "Application will enable syncing of Calendar and Contacts from
 app_icon = "icon-google-plus"
 app_color = "#dd4b39"
 app_email = "info@frappe.io"
-app_version = "0.0.1"
+app_version = "1.0.0"
 
 # Includes in <head>
 # ------------------
@@ -70,29 +70,20 @@ doc_events = {
 	"Event": {
 		"on_update": "google_integration.google_calendar_event.update_gcal_event",
 		"on_trash": "google_integration.google_calendar_event.delete_gcal_event"
+	},
+	"Contact": {
+		"on_update": "google_integration.google_contact.create_or_update_contact",
+		"on_trash": "google_integration.google_contact.delete_contact"
 	}
 }
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"google_integration.tasks.all"
-# 	],
-# 	"daily": [
-# 		"google_integration.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"google_integration.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"google_integration.tasks.weekly"
-# 	]
-# 	"monthly": [
-# 		"google_integration.tasks.monthly"
-# 	]
-# }
+scheduler_events = {
+	"all": "google_integration.scheduler_handler.sync_with_google"
+
+}
 
 # Testing
 # -------

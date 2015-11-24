@@ -21,7 +21,7 @@ class GoogleAccount(Document):
 	pass
 
 oauth2_providers = {
-	"calendar": {
+	"google_connect": {
 		"flow_params": {
 			"name": "gcal",
 			"authorize_url": "https://accounts.google.com/o/oauth2/auth",
@@ -34,7 +34,7 @@ oauth2_providers = {
 		"auth_url_data": {
 			# "approval_prompt":"force",
 			'access_type': 'offline',
-			"scope": ['https://www.googleapis.com/auth/calendar','https://www.google.com/m8/feeds'],
+			"scope": 'https://www.googleapis.com/auth/calendar https://www.google.com/m8/feeds',
 			"response_type": "code"
 		},
 
@@ -58,7 +58,7 @@ def get_oauth2_flow(provider):
 	from rauth import OAuth2Service
 
 	# get client_id and client_secret
-	params = get_oauth_keys(provider)
+	params = get_oauth_keys()
 
 	# additional params for getting the flow
 	params.update(oauth2_providers[provider]["flow_params"])
@@ -67,7 +67,7 @@ def get_oauth2_flow(provider):
 
 	return OAuth2Service(**params)
 
-def get_oauth_keys(provider):
+def get_oauth_keys():
 	"""get client_id and client_secret from database or conf"""
 
 	social = frappe.get_doc("Google App Setup", "Google App Setup")
@@ -88,10 +88,10 @@ def get_redirect_uri(provider):
 def generate_token():
 	# check storage for credentials
 	store = Storage('Google Account', frappe.session.user)
-	# store = Storage('GCal', "saurabh@erpnext.com")
+	# store = Storage('Google Account', "saurabh@erpnext.com")
 	credentials = store.get()
 	if not credentials or credentials.invalid:
-		url = get_oauth2_authorize_url('calendar')
+		url = get_oauth2_authorize_url('google_connect')
 		return {
 			"url":url,
 			"is_synced": False
@@ -100,10 +100,10 @@ def generate_token():
 @frappe.whitelist()
 def get_credentials(code):
 	if code:
-		params = get_oauth_keys('gcal')
+		params = get_oauth_keys()
 		params.update({
-			"scope": 'https://www.googleapis.com/auth/calendar',
-			"redirect_uri": get_redirect_uri('calendar'),
+			"scope": 'https://www.googleapis.com/auth/calendar https://www.google.com/m8/feeds',
+			"redirect_uri": get_redirect_uri('google_connect'),
 			"params": {
 				"approval_prompt":"force",
 				'access_type': 'offline',
@@ -116,11 +116,7 @@ def get_credentials(code):
 		store = Storage('Google Account', frappe.session.user)
 		store.put(credentials)
 		
-		frappe.get_doc({
-			"doctype": "Google Account",
-			"name": frappe.session.user,
-			"authenticated": 1
-		}).save(ignore_permissions=True)
+		frappe.db.set_value("Google Account", frappe.session.user, "authenticated", 1)
 		
 		frappe.local.response["type"] = "redirect"
-		frappe.local.response["location"] = "/desk#Form/Google Account/%s", frappe.sesion.user
+		frappe.local.response["location"] = "/desk#Form/Google Account/%s"%frappe.seesion.user

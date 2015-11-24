@@ -1,14 +1,15 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
-
+from frappe import _
 from datetime import datetime, timedelta, date
 from apiclient.discovery import build
 from httplib2 import Http
 import oauth2client
 from oauth2client.client import Credentials
 from oauth2client.keyring_storage import Storage
-from google_integration.utils import get_credentials, get_service_object, get_rule_dict
+from google_integration.utils import get_credentials, get_service_object, get_rule_dict,\
+	get_formatted_update_date
 from frappe.utils import cint, get_datetime
 from dateutil.relativedelta import relativedelta
 
@@ -17,8 +18,7 @@ def sync_google_calendar(user):
 	"""initiates event syncing"""
 	credentials = get_credentials(user)
 	
-	eventsResult = get_gcal_events(credentials)
-	events = eventsResult.get('items', [])
+	events = get_gcal_events(credentials, user)
 
 	if not events:
 		frappe.msgprint("No Events to Sync")
@@ -30,15 +30,20 @@ def sync_google_calendar(user):
 			else:
 				create_event(event)
 
-def get_gcal_events(credentials):
+def get_gcal_events(credentials, user):
 	"""fetch event from google calendar"""
-	now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-	service = build('calendar', 'v3', http=credentials.authorize(Http()))
-	eventsResult = service.events().list(
-		calendarId='primary', timeMin=now).execute()
-	events = eventsResult.get('items', [])
-	return eventsResult
-
+	try:
+		now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+		service = build('calendar', 'v3', http=credentials.authorize(Http()))
+		eventsResult = service.events().list(
+			calendarId='primary', timeMin=now).execute()
+		events = eventsResult.get('items', [])
+		return events
+	except:
+		frappe.db.set_value("Google Account", user, "authenticated", 0)
+		frappe.db.commit()
+		frappe.throw(_("Invalid Access Token"))
+		
 def create_event(event):
 	e = frappe.new_doc("Event")
 	e = set_values(e, event)
@@ -47,9 +52,9 @@ def create_event(event):
 def update_event(name, event):
 	e = frappe.get_doc("Event", name)
 
-	if e.modified != get_formatted_updated_date(event['updated']):
+	if e.modified != get_formatted_update_date(event['updated']):
 		e = set_values(e, event)
-		# e.save(ignore_permissions=True)
+		e.save(ignore_permissions=True)
 
 def set_values(doc, event):
 	"""create event dict from google event """
@@ -110,10 +115,6 @@ def is_existing_event(event):
 	"""return matching event name"""
 	name = frappe.db.get_value("Event",{"google_event_id":event.get("id")},"name")
 	return name
-
-def get_formatted_updated_date(str_date):
-	""" converting 2015-08-21T13:11:39.335Z string date to datetime """
-	return datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%S.%fZ")
 
 def setup_recurring_event(doc, recurring_rule):
 	rule_dict = get_rule_dict(recurring_rule)

@@ -41,3 +41,19 @@ def get_rule_dict(recurring_rule):
 		rule_dict[temp_list[0]] = temp_list[1]
 	
 	return rule_dict
+
+def get_gd_client(user):
+	import atom.data
+	import gdata.data
+	import gdata.contacts.client
+	import gdata.contacts.data
+	
+	gd_client = gdata.contacts.client.ContactsClient(source='Google Integration')
+	cred = get_credentials(user)
+	auth = gdata.gauth.OAuth2TokenFromCredentials(cred)
+	gd_client = auth.authorize(gd_client)
+	return gd_client
+	
+def get_formatted_update_date(str_date):
+	""" converting 2015-08-21T13:11:39.335Z string date to datetime """
+	return datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%S.%fZ")
