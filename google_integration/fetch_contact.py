@@ -20,11 +20,12 @@ def sync_google_contact(user=None):
 		
 	feed = get_feed(user)
 	for i, entry in enumerate(feed.entry):
-		contact = get_contact(entry)
-		if not contact:
-			create_contact(entry)
-		else:
-			update_contact(entry, contact)
+		if entry.name:
+			contact = get_contact(entry)
+			if not contact:
+				create_contact(entry)
+			else:
+				update_contact(entry, contact)
 					
 def get_feed(user):
 	""" return contacts in xml form"""
@@ -38,7 +39,10 @@ def get_feed(user):
 		frappe.throw(_("Invalid Access Token"))
 	
 def create_contact(entry):
-	frappe.get_doc(get_contact_dict(entry)).insert()
+	try:
+		frappe.get_doc(get_contact_dict(entry)).insert()
+	except:
+		pass
 
 def update_contact(entry, name):
 	contact = frappe.get_doc("Contact", name)
@@ -51,7 +55,7 @@ def get_contact_dict(entry):
 		"doctype": "Contact",
 		"google_contact_id": entry.id.text,
 		"first_name": entry.name.given_name.text,
-		"last_name": entry.name.__dict__.get("family_name")
+		"last_name": entry.name.__dict__.get("family_name").text
 	}
 
 	for email in entry.email:

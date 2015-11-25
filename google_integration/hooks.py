@@ -10,6 +10,7 @@ app_color = "#dd4b39"
 app_email = "info@frappe.io"
 app_version = "1.0.0"
 
+fixtures = ["Custom Field"]
 # Includes in <head>
 # ------------------
 

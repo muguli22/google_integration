@@ -94,13 +94,12 @@ def add_attendees(doc, event):
 	event_attendees = ""
 	if event.get("attendees"):
 		for attendee in event.get("attendees"):
-
+			print attendee
 			att.append({"email": attendee.get("email")})
-			event_attendees += "%s : %s \n"%(attendee.get("displayName") or "Name", attendee.get("email"))
+			event_attendees += "%s : %s \n"%(attendee.get("displayName") or "Email Id", attendee.get("email"))
 	
-	if not doc.get("roles"):
-		doc.set("roles",[])
-	
+	doc.set("roles",[])
+	print att
 	if att:
 		ch = doc.append('roles', {})
 		ch.attendees = str(att)

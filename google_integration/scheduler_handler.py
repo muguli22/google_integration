@@ -7,7 +7,7 @@ from google_integration.fetch_contact import sync_google_contact
 
 def sync_with_google():
 	for user in frappe.db.sql("""select name, sync_google_calendar, sync_google_contact  
-		from `tabGoogle Account` where authenticated=1"""%(mode),as_dict=True):
+		from `tabGoogle Account` where authenticated=1""", as_dict=True):
 		frappe.set_user("Administrator")
 		
 		if user.get("sync_google_calendar"):

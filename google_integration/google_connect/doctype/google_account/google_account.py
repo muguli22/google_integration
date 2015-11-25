@@ -23,7 +23,7 @@ class GoogleAccount(Document):
 oauth2_providers = {
 	"google_connect": {
 		"flow_params": {
-			"name": "gcal",
+			"name": "Google Integration",
 			"authorize_url": "https://accounts.google.com/o/oauth2/auth",
 			"access_token_url": "https://accounts.google.com/o/oauth2/token",
 			"base_url": "https://www.googleapis.com",
@@ -50,7 +50,7 @@ def get_oauth2_authorize_url(provider):
 
 	# additional data if any
 	data.update(oauth2_providers[provider].get("auth_url_data", {}))
-
+	print "\n\n", data
 	return flow.get_authorize_url(**data)
 	# return flow.step1_get_authorize_url(**data)
 
@@ -92,6 +92,7 @@ def generate_token():
 	credentials = store.get()
 	if not credentials or credentials.invalid:
 		url = get_oauth2_authorize_url('google_connect')
+		print "\n\n", url
 		return {
 			"url":url,
 			"is_synced": False
@@ -102,7 +103,7 @@ def get_credentials(code):
 	if code:
 		params = get_oauth_keys()
 		params.update({
-			"scope": 'https://www.googleapis.com/auth/calendar https://www.google.com/m8/feeds',
+			"scope": "https://www.googleapis.com/auth/calendar https://www.google.com/m8/feeds",
 			"redirect_uri": get_redirect_uri('google_connect'),
 			"params": {
 				"approval_prompt":"force",
@@ -117,6 +118,7 @@ def get_credentials(code):
 		store.put(credentials)
 		
 		frappe.db.set_value("Google Account", frappe.session.user, "authenticated", 1)
+		frappe.db.commit()
 		
 		frappe.local.response["type"] = "redirect"
-		frappe.local.response["location"] = "/desk#Form/Google Account/%s"%frappe.seesion.user
+		frappe.local.response["location"] = "/desk#Form/Google Account/%s"%frappe.session.user
