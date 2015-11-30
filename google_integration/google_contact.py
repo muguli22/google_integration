@@ -63,7 +63,6 @@ def update_contact(doc):
 	
 	try:
 		updated_contact = gd_client.Update(contact_entry)
-		print 'Updated: %s' % updated_contact.updated.text
 	except gdata.client.RequestError, e:
 		pass
 		

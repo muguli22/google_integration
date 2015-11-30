@@ -1,0 +1,247 @@
+<!-- title: Google Account -->
+
+
+
+
+
+<div class="dev-header">
+
+<a class="btn btn-default btn-sm" disabled style="margin-bottom: 10px;">
+	Version 0.0.0</a>
+
+
+	<a class="btn btn-default btn-sm" href="https://github.com/frappe/google_integration/tree/develop/google_integration/google_connect/doctype/google_account"
+		target="_blank" style="margin-left: 10px; margin-bottom: 10px;"><i class="octicon octicon-mark-github"></i> Source</a>
+
+</div>
+
+
+
+
+
+    <p><b>Table Name:</b> <code>tabGoogle Account</code></p>
+
+
+
+
+<h3>Fields</h3>
+
+<table class="table table-bordered" style="table-layout: fixed;">
+    <thead>
+        <tr>
+            <th style="width: 5%">Sr</th>
+            <th style="width: 25%">Fieldname</th>
+            <th style="width: 20%">Type</th>
+            <th style="width: 25%">Label</th>
+            <th style="width: 25%">Options</th>
+        </tr>
+    </thead>
+    <tbody>
+        
+        <tr >
+            <td>1</td>
+            <td ><code>sync_google_calendar</code></td>
+            <td >
+                Check</td>
+            <td >
+                Sync Google Calendar
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>2</td>
+            <td ><code>column_break_2</code></td>
+            <td class="info">
+                Column Break</td>
+            <td >
+                
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>3</td>
+            <td ><code>sync_google_contact</code></td>
+            <td >
+                Check</td>
+            <td >
+                Sync Google Contact
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr class="info">
+            <td>4</td>
+            <td ><code>section_break_4</code></td>
+            <td >
+                Section Break</td>
+            <td >
+                
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>5</td>
+            <td ><code>email_id</code></td>
+            <td >
+                Data</td>
+            <td >
+                Email Id
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>6</td>
+            <td ><code>authenticated</code></td>
+            <td >
+                Check</td>
+            <td >
+                Authenticated
+                
+            </td>
+            <td></td>
+        </tr>
+        
+    </tbody>
+</table>
+
+
+    <hr>
+    <h3>Controller</h3>
+    <h4>google_integration.google_connect.doctype.google_account.google_account</h4>
+
+    
+
+
+
+	
+        
+	<h3 style="font-weight: normal;">Class <b>GoogleAccount</b></h3>
+    
+    <p style="padding-left: 30px;"><i>Inherits from frappe.model.document.Document</i></h4>
+    
+    <div class="docs-attr-desc"><p></p>
+</div>
+    <div style="padding-left: 30px;">
+        
+    </div>
+    <hr>
+
+	
+
+	
+        
+    
+    <p><span class="label label-info">Public API</span>
+        <br><code>/api/method/google_integration.google_connect.doctype.google_account.google_account.generate_token</code>
+    </p>
+	<p class="docs-attr-name">
+        <a name="google_integration.google_connect.doctype.google_account.google_account.generate_token" href="#google_integration.google_connect.doctype.google_account.google_account.generate_token" class="text-muted small">
+            <i class="icon-link small" style="color: #ccc;"></i></a>
+		google_integration.google_connect.doctype.google_account.google_account.<b>generate_token</b>
+        <i class="text-muted">()</i>
+    </p>
+	<div class="docs-attr-desc"><p><span class="text-muted">No docs</span></p>
+</div>
+	<br>
+
+	
+
+	
+        
+    
+    <p><span class="label label-info">Public API</span>
+        <br><code>/api/method/google_integration.google_connect.doctype.google_account.google_account.get_credentials</code>
+    </p>
+	<p class="docs-attr-name">
+        <a name="google_integration.google_connect.doctype.google_account.google_account.get_credentials" href="#google_integration.google_connect.doctype.google_account.google_account.get_credentials" class="text-muted small">
+            <i class="icon-link small" style="color: #ccc;"></i></a>
+		google_integration.google_connect.doctype.google_account.google_account.<b>get_credentials</b>
+        <i class="text-muted">(code)</i>
+    </p>
+	<div class="docs-attr-desc"><p><span class="text-muted">No docs</span></p>
+</div>
+	<br>
+
+	
+
+	
+        
+    
+    
+	<p class="docs-attr-name">
+        <a name="google_integration.google_connect.doctype.google_account.google_account.get_oauth2_authorize_url" href="#google_integration.google_connect.doctype.google_account.google_account.get_oauth2_authorize_url" class="text-muted small">
+            <i class="icon-link small" style="color: #ccc;"></i></a>
+		google_integration.google_connect.doctype.google_account.google_account.<b>get_oauth2_authorize_url</b>
+        <i class="text-muted">(provider)</i>
+    </p>
+	<div class="docs-attr-desc"><p><span class="text-muted">No docs</span></p>
+</div>
+	<br>
+
+	
+
+	
+        
+    
+    
+	<p class="docs-attr-name">
+        <a name="google_integration.google_connect.doctype.google_account.google_account.get_oauth2_flow" href="#google_integration.google_connect.doctype.google_account.google_account.get_oauth2_flow" class="text-muted small">
+            <i class="icon-link small" style="color: #ccc;"></i></a>
+		google_integration.google_connect.doctype.google_account.google_account.<b>get_oauth2_flow</b>
+        <i class="text-muted">(provider)</i>
+    </p>
+	<div class="docs-attr-desc"><p><span class="text-muted">No docs</span></p>
+</div>
+	<br>
+
+	
+
+	
+        
+    
+    
+	<p class="docs-attr-name">
+        <a name="google_integration.google_connect.doctype.google_account.google_account.get_oauth_keys" href="#google_integration.google_connect.doctype.google_account.google_account.get_oauth_keys" class="text-muted small">
+            <i class="icon-link small" style="color: #ccc;"></i></a>
+		google_integration.google_connect.doctype.google_account.google_account.<b>get_oauth_keys</b>
+        <i class="text-muted">()</i>
+    </p>
+	<div class="docs-attr-desc"><p>get client<em>id and client</em>secret from database or conf</p>
+</div>
+	<br>
+
+	
+
+	
+        
+    
+    
+	<p class="docs-attr-name">
+        <a name="google_integration.google_connect.doctype.google_account.google_account.get_redirect_uri" href="#google_integration.google_connect.doctype.google_account.google_account.get_redirect_uri" class="text-muted small">
+            <i class="icon-link small" style="color: #ccc;"></i></a>
+		google_integration.google_connect.doctype.google_account.google_account.<b>get_redirect_uri</b>
+        <i class="text-muted">(provider)</i>
+    </p>
+	<div class="docs-attr-desc"><p><span class="text-muted">No docs</span></p>
+</div>
+	<br>
+
+	
+
+
+    
+    
+
+
+<!-- autodoc -->
+<!-- jinja -->
+<!-- static -->

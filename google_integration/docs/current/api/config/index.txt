@@ -1,0 +1,3 @@
+google_integration.config.desktop
+google_integration.config.docs
+google_integration.config

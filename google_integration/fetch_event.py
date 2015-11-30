@@ -94,12 +94,10 @@ def add_attendees(doc, event):
 	event_attendees = ""
 	if event.get("attendees"):
 		for attendee in event.get("attendees"):
-			print attendee
 			att.append({"email": attendee.get("email")})
 			event_attendees += "%s : %s \n"%(attendee.get("displayName") or "Email Id", attendee.get("email"))
 	
 	doc.set("roles",[])
-	print att
 	if att:
 		ch = doc.append('roles', {})
 		ch.attendees = str(att)
@@ -117,7 +115,6 @@ def is_existing_event(event):
 
 def setup_recurring_event(doc, recurring_rule):
 	rule_dict = get_rule_dict(recurring_rule)
-	frappe.errprint(rule_dict)
 	if rule_dict['FREQ'] == "DAILY":
 		setup_daily_rule(doc, rule_dict)
 	
@@ -134,7 +131,7 @@ def setup_recurring_event(doc, recurring_rule):
 		event_type=rule_dict['FREQ'])
 
 def setup_daily_rule(doc, rule_dict):
-	count = cint(rule_dict.get("COUNT"), 7)
+	count = cint(rule_dict.get("COUNT", 7))
 	doc.repeat_on = "Every Day"
 	
 	day_list = []

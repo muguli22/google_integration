@@ -9,6 +9,7 @@ app_icon = "icon-google-plus"
 app_color = "#dd4b39"
 app_email = "info@frappe.io"
 app_version = "1.0.0"
+app_license = "MIT"
 
 fixtures = ["Custom Field"]
 # Includes in <head>

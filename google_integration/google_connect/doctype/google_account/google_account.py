@@ -50,7 +50,7 @@ def get_oauth2_authorize_url(provider):
 
 	# additional data if any
 	data.update(oauth2_providers[provider].get("auth_url_data", {}))
-	print "\n\n", data
+
 	return flow.get_authorize_url(**data)
 	# return flow.step1_get_authorize_url(**data)
 
@@ -92,7 +92,6 @@ def generate_token():
 	credentials = store.get()
 	if not credentials or credentials.invalid:
 		url = get_oauth2_authorize_url('google_connect')
-		print "\n\n", url
 		return {
 			"url":url,
 			"is_synced": False

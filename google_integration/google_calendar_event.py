@@ -10,45 +10,48 @@ from oauth2client.client import Credentials
 from oauth2client.keyring_storage import Storage
 from google_integration.utils import get_credentials, get_service_object
 import json
+from frappe.utils import cstr
 
 def update_gcal_event(doc, method):
 	"""triggered by hook, on event update"""
 	# check if event newly created or updated
 	event = None
-	service = get_service_object(frappe.session.user)
+	if calendar_sync_activated():
+		service = get_service_object(frappe.session.user)
 
-	if doc.google_event_id:
-		# update google calender event
-		if not (doc.modified == doc.creation):
+		if doc.google_event_id:
+			# update google calender event
+			if doc.modified != doc.creation:
+				event = get_google_event_dict(doc)
+				event = service.events().update(calendarId='primary', eventId=doc.google_event_id, body=event).execute()
+
+				if event: frappe.msgprint("Google Calender Event is updated successfully")
+		else:
+			# create new google calender event
 			event = get_google_event_dict(doc)
-			event = service.events().update(calendarId='primary', eventId=doc.google_event_id, body=event).execute()
+			event = service.events().insert(calendarId='primary', body=event).execute()
 
-			if event: frappe.msgprint("Google Calender Event is updated successfully")
-	else:
-		# create new google calender event
-		event = get_google_event_dict(doc)
-		event = service.events().insert(calendarId='primary', body=event).execute()
-
-		if event:
-			frappe.db.set_value("Event", doc.name, "google_event_id", event.get("id"))
-			frappe.msgprint("New Google Calender Event is created successfully")
+			if event:
+				frappe.db.set_value("Event", doc.name, "google_event_id", event.get("id"))
+				frappe.msgprint("New Google Calender Event is created successfully")
 
 def delete_gcal_event(doc, method):
 	"""triggered by hooks, at event deletion"""
-	service = get_service_object(frappe.session.user)
-	if doc.google_event_id:
-		try:
-			service.events().delete(calendarId='primary', eventId=doc.google_event_id).execute()
-			frappe.msgprint("New Google Calender Event is deleted successfully")
+	if calendar_sync_activated():
+		service = get_service_object(frappe.session.user)
+		if doc.google_event_id:
+			try:
+				service.events().delete(calendarId='primary', eventId=doc.google_event_id).execute()
+				frappe.msgprint("New Google Calender Event is deleted successfully")
 			
-		except Exception, e:
-			frappe.msgprint("Error occured while deleting google event\nDeleting Event from Frappe, Please delete the google event manually")
-			frappe.delete_doc("Event", doc.name)
+			except Exception, e:
+				frappe.msgprint("Error occured while deleting google event\nDeleting Event from Frappe, Please delete the google event manually")
+				frappe.delete_doc("Event", doc.name)
 			
-		finally:
-			# redirect to event list
-			frappe.local.response["type"] = "redirect"
-			frappe.local.response["location"] = "/desk#List/Event"
+			finally:
+				# redirect to event list
+				frappe.local.response["type"] = "redirect"
+				frappe.local.response["location"] = "/desk#List/Event"
 
 def get_google_event_dict(doc):
 	""" return event dict """
@@ -170,7 +173,7 @@ def get_byday(doc):
 def add_end_term_for_recurring_event(rule, doc):
 	""" return rule by adding end date"""
 	if doc.repeat_till:
-		until = datetime.strptime(doc.repeat_till, '%Y-%m-%d').strftime("%Y%m%dT%H%M%SZ")
+		until = datetime.strptime(cstr(doc.repeat_till).split(' ')[0], '%Y-%m-%d').strftime("%Y%m%dT%H%M%SZ")
 		rule = ["%s;UNTIL=%s"%(rule[0],until)]
 	
 	return rule
@@ -190,3 +193,15 @@ def get_day_short_name(day=None, index=None):
 	
 	if index==0 or index:
 		return day_dict[calendar.day_name[index]]
+	
+def calendar_sync_activated():
+	if frappe.db.get_value("Google Account", frappe.session.user, "name"):
+		doc = frappe.get_doc("Google Account", frappe.session.user)
+	
+		if doc.sync_google_calendar and doc.authenticated:
+			return True
+			
+	return False
+	
+		
+	
