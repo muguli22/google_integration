@@ -17,9 +17,6 @@ from oauth2client.client import Credentials
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.keyring_storage import Storage
 
-class GoogleAccount(Document):
-	pass
-
 oauth2_providers = {
 	"google_connect": {
 		"flow_params": {
@@ -29,7 +26,7 @@ oauth2_providers = {
 			"base_url": "https://www.googleapis.com",
 		},
 
-		"redirect_uri": "/api/method/google_integration.google_connect.doctype.google_account.google_account.get_credentials",
+		"redirect_uri": "/api/method/google_integration.auth_handler.get_credentials",
 
 		"auth_url_data": {
 			# "approval_prompt":"force",
@@ -87,7 +84,7 @@ def get_redirect_uri(provider):
 @frappe.whitelist()
 def generate_token():
 	# check storage for credentials
-	store = Storage('Google Account', frappe.session.user)
+	store = Storage('User', frappe.session.user)
 	# store = Storage('Google Account', "saurabh@erpnext.com")
 	credentials = store.get()
 	if not credentials or credentials.invalid:
@@ -113,11 +110,11 @@ def get_credentials(code):
 		flow = OAuth2WebServerFlow(**params)
 		credentials = flow.step2_exchange(code)
 		# Store Credentials in Keyring Storage
-		store = Storage('Google Account', frappe.session.user)
+		store = Storage('User', frappe.session.user)
 		store.put(credentials)
 		
-		frappe.db.set_value("Google Account", frappe.session.user, "authenticated", 1)
+		frappe.db.set_value("User", frappe.session.user, "authenticated", 1)
 		frappe.db.commit()
 		
 		frappe.local.response["type"] = "redirect"
-		frappe.local.response["location"] = "/desk#Form/Google Account/%s"%frappe.session.user
+		frappe.local.response["location"] = "/desk#Form/User/%s"%frappe.session.user

@@ -8,7 +8,7 @@ from httplib2 import Http
 import oauth2client
 from oauth2client.client import Credentials
 from oauth2client.keyring_storage import Storage
-from google_integration.utils import get_credentials, get_service_object
+from google_integration.utils import get_credentials, get_service_object, sync_activated
 import json
 from frappe.utils import cstr
 
@@ -16,7 +16,7 @@ def update_gcal_event(doc, method):
 	"""triggered by hook, on event update"""
 	# check if event newly created or updated
 	event = None
-	if calendar_sync_activated():
+	if sync_activated():
 		service = get_service_object(frappe.session.user)
 
 		if doc.google_event_id:
@@ -37,7 +37,7 @@ def update_gcal_event(doc, method):
 
 def delete_gcal_event(doc, method):
 	"""triggered by hooks, at event deletion"""
-	if calendar_sync_activated():
+	if sync_activated():
 		service = get_service_object(frappe.session.user)
 		if doc.google_event_id:
 			try:
@@ -193,15 +193,3 @@ def get_day_short_name(day=None, index=None):
 	
 	if index==0 or index:
 		return day_dict[calendar.day_name[index]]
-	
-def calendar_sync_activated():
-	if frappe.db.get_value("Google Account", frappe.session.user, "name"):
-		doc = frappe.get_doc("Google Account", frappe.session.user)
-	
-		if doc.sync_google_calendar and doc.authenticated:
-			return True
-			
-	return False
-	
-		
-	

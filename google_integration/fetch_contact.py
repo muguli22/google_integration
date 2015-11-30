@@ -34,7 +34,7 @@ def get_feed(user):
 		feed = gd_client.GetContacts()
 		return feed
 	except:
-		frappe.db.set_value("Google Account", user, "authenticated", 0)
+		frappe.db.set_value("User", user, "authenticated", 0)
 		frappe.db.commit()
 		frappe.throw(_("Invalid Access Token"))
 	

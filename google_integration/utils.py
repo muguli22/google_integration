@@ -8,9 +8,17 @@ from httplib2 import Http
 import oauth2client
 from oauth2client.client import Credentials
 from oauth2client.keyring_storage import Storage
+
+def sync_activated(user=None):
+	doc = frappe.get_doc("User", user or frappe.session.user)
+
+	if doc.authenticated:
+		return True
 			
+	return False
+	
 def get_credentials(user):
-	store = Storage('Google Account', user)
+	store = Storage('User', user)
 	credentials = store.get()
 	
 	return credentials

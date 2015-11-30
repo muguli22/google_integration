@@ -1,9 +1,9 @@
-frappe.ui.form.on("Google Account", "refresh", function(frm){
+frappe.ui.form.on("User", "refresh", function(frm){
 	if(!frm.doc.__islocal && !frm.doc.authenticated){
 		cur_frm.add_custom_button(__('Authenticate'),
 			function() {  
 				frappe.call({
-					method:"google_integration.google_connect.doctype.google_account.google_account.generate_token",
+					method:"google_integration.auth_handler.generate_token",
 					freeze: true,
 					callback:function(r){
 						if(!r.exc && r.message){
@@ -15,11 +15,11 @@ frappe.ui.form.on("Google Account", "refresh", function(frm){
 				})
 			}, 'icon-sitemap')
 	}
-	if(!frm.doc.__islocal && frm.doc.sync_google_calendar && frm.doc.authenticated) {
+	if(!frm.doc.__islocal && frm.doc.authenticated) {
 		cur_frm.add_custom_button(__("Sync Calendar"), sync_calendar)
 	}
 	
-	if(!frm.doc.__islocal && frm.doc.sync_google_contact && frm.doc.authenticated) {
+	if(!frm.doc.__islocal && frm.doc.authenticated) {
 		cur_frm.add_custom_button(__("Sync Contact"), sync_contact)
 	}
 })

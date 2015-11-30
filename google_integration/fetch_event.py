@@ -16,14 +16,16 @@ from dateutil.relativedelta import relativedelta
 @frappe.whitelist()
 def sync_google_calendar(user):
 	"""initiates event syncing"""
+	print user
 	credentials = get_credentials(user)
-	
+	print credentials
 	events = get_gcal_events(credentials, user)
 
 	if not events:
 		frappe.msgprint("No Events to Sync")
 	else:		
 		for event in events:
+			print event
 			existing_event_name = is_existing_event(event)
 			if existing_event_name:
 				update_event(existing_event_name, event)
@@ -40,7 +42,7 @@ def get_gcal_events(credentials, user):
 		events = eventsResult.get('items', [])
 		return events
 	except:
-		frappe.db.set_value("Google Account", user, "authenticated", 0)
+		frappe.db.set_value("User", user, "authenticated", 0)
 		frappe.db.commit()
 		frappe.throw(_("Invalid Access Token"))
 		

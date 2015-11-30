@@ -6,15 +6,17 @@ import gdata.contacts.client
 import gdata.contacts.data
 from frappe.utils import cint, get_datetime
 from dateutil.relativedelta import relativedelta
-from google_integration.utils import get_credentials, get_service_object, get_rule_dict, get_gd_client
+from google_integration.utils import get_credentials, get_service_object, get_rule_dict, get_gd_client,\
+ sync_activated
 
 def create_or_update_contact(doc, method):
 	"""triggered by hook on update of contact"""
-	if not doc.google_contact_id:
-		create_contact(doc)
-	else:
-		if doc.creation != doc.modified:
-			update_contact(doc)
+	if sync_activated():
+		if not doc.google_contact_id:
+			create_contact(doc)
+		else:
+			if doc.creation != doc.modified:
+				update_contact(doc)
 	
 def create_contact(doc):
 	"""if google_contact_id is not exist then create contact"""
@@ -29,9 +31,11 @@ def create_contact(doc):
 		
 	new_contact.phone_number.append(gdata.data.PhoneNumber(text=doc.phone, rel=gdata.data.WORK_REL, 
 		primary='true'))
-		
-	contact_entry = gd_client.CreateContact(new_contact)
 	
+	try:
+		contact_entry = gd_client.CreateContact(new_contact)
+	except gdata.client.RequestError, e:
+		pass
 	frappe.db.set_value("Contact", doc.name, "google_contact_id", contact_entry.id.text)
 
 def update_contact(doc):
