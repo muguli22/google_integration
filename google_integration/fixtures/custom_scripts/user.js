@@ -15,11 +15,11 @@ frappe.ui.form.on("User", "refresh", function(frm){
 				})
 			}, 'icon-sitemap')
 	}
-	if(!frm.doc.__islocal && frm.doc.authenticated) {
+	if(!frm.doc.__islocal && frm.doc.authenticated && frm.doc.sync_calendar) {
 		cur_frm.add_custom_button(__("Sync Calendar"), sync_calendar)
 	}
 	
-	if(!frm.doc.__islocal && frm.doc.authenticated) {
+	if(!frm.doc.__islocal && frm.doc.authenticated && frm.doc.sync_contact) {
 		cur_frm.add_custom_button(__("Sync Contact"), sync_contact)
 	}
 })

@@ -8,8 +8,8 @@ from httplib2 import Http
 import oauth2client
 from oauth2client.client import Credentials
 from oauth2client.keyring_storage import Storage
-from google_integration.utils import get_credentials, get_service_object, get_rule_dict,\
-	get_formatted_update_date
+from google_integration.utils import (get_auth_cred_obj, get_service_object, get_rule_dict, 
+	get_formatted_update_date)
 from frappe.utils import cint, get_datetime
 from dateutil.relativedelta import relativedelta
 
@@ -17,7 +17,7 @@ from dateutil.relativedelta import relativedelta
 def sync_google_calendar(user):
 	"""initiates event syncing"""
 	print user
-	credentials = get_credentials(user)
+	credentials = get_auth_cred_obj(user)
 	print credentials
 	events = get_gcal_events(credentials, user)
 
@@ -42,7 +42,8 @@ def get_gcal_events(credentials, user):
 		events = eventsResult.get('items', [])
 		return events
 	except:
-		frappe.db.set_value("User", user, "authenticated", 0)
+		frappe.db.sql(""" update tabUser set authenticated=0, auth_token='' 
+			where name = %s """, user)
 		frappe.db.commit()
 		frappe.throw(_("Invalid Access Token"))
 		

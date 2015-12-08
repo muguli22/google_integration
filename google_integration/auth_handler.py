@@ -11,11 +11,13 @@ import os
 from apiclient.discovery import build
 from httplib2 import Http
 import oauth2client
+import json 
 from oauth2client import client
 from oauth2client import tools
-from oauth2client.client import Credentials
+from oauth2client.client import Credentials, OAuth2Credentials
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.keyring_storage import Storage
+from google_integration.utils import get_auth_cred_obj
 
 oauth2_providers = {
 	"google_connect": {
@@ -31,7 +33,7 @@ oauth2_providers = {
 		"auth_url_data": {
 			# "approval_prompt":"force",
 			'access_type': 'offline',
-			"scope": 'https://www.googleapis.com/auth/calendar https://www.google.com/m8/feeds',
+			"scope": 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar https://www.google.com/m8/feeds',
 			"response_type": "code"
 		},
 
@@ -84,9 +86,7 @@ def get_redirect_uri(provider):
 @frappe.whitelist()
 def generate_token():
 	# check storage for credentials
-	store = Storage('User', frappe.session.user)
-	# store = Storage('Google Account', "saurabh@erpnext.com")
-	credentials = store.get()
+	credentials = get_auth_cred_obj(frappe.session.user)
 	if not credentials or credentials.invalid:
 		url = get_oauth2_authorize_url('google_connect')
 		return {
@@ -99,7 +99,7 @@ def get_credentials(code):
 	if code:
 		params = get_oauth_keys()
 		params.update({
-			"scope": "https://www.googleapis.com/auth/calendar https://www.google.com/m8/feeds",
+			"scope": "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar https://www.google.com/m8/feeds",
 			"redirect_uri": get_redirect_uri('google_connect'),
 			"params": {
 				"approval_prompt":"force",
@@ -109,12 +109,12 @@ def get_credentials(code):
 		})
 		flow = OAuth2WebServerFlow(**params)
 		credentials = flow.step2_exchange(code)
-		# Store Credentials in Keyring Storage
-		store = Storage('User', frappe.session.user)
-		store.put(credentials)
 		
-		frappe.db.set_value("User", frappe.session.user, "authenticated", 1)
+		frappe.db.sql("""update tabUser set authenticated=1, auth_token=%s 
+			where name=%s""", (json.dumps(credentials.to_json()), frappe.session.user))		
+
 		frappe.db.commit()
 		
 		frappe.local.response["type"] = "redirect"
 		frappe.local.response["location"] = "/desk#Form/User/%s"%frappe.session.user
+		

@@ -10,8 +10,9 @@ import gdata.contacts.client
 import gdata.contacts.data
 from frappe.utils import cint, get_datetime
 from dateutil.relativedelta import relativedelta
-from google_integration.utils import get_credentials, get_service_object, \
-	get_rule_dict, get_gd_client, get_formatted_update_date
+from google_integration.utils import (get_auth_cred_obj, get_service_object, 
+	get_rule_dict, get_gd_client, get_formatted_update_date)
+from frappe import _
 
 @frappe.whitelist()
 def sync_google_contact(user=None):
@@ -34,7 +35,8 @@ def get_feed(user):
 		feed = gd_client.GetContacts()
 		return feed
 	except:
-		frappe.db.set_value("User", user, "authenticated", 0)
+		frappe.db.sql(""" update tabUser set authenticated=0, auth_token='' 
+			where user = %s """, user)
 		frappe.db.commit()
 		frappe.throw(_("Invalid Access Token"))
 	

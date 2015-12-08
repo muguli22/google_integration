@@ -6,7 +6,11 @@ from datetime import datetime, timedelta, date
 from apiclient.discovery import build
 from httplib2 import Http
 import oauth2client
-from oauth2client.client import Credentials
+import atom.data
+import gdata.data
+import gdata.contacts.client
+import gdata.contacts.data
+from oauth2client.client import Credentials, OAuth2Credentials
 from oauth2client.keyring_storage import Storage
 
 def sync_activated(user=None):
@@ -17,16 +21,20 @@ def sync_activated(user=None):
 			
 	return False
 	
-def get_credentials(user):
-	store = Storage('User', user)
-	credentials = store.get()
-	
-	return credentials
+def get_auth_cred_obj(user):
+	import json
+	auth_token = frappe.get_doc("User", frappe.session.user).auth_token
+	if auth_token:
+		cred = json.loads(auth_token)
+		cred = OAuth2Credentials.from_json(cred)
+		return cred
+	else:
+		return None
 	
 def get_service_object(user):
 	# get google credentials from storage
 	service = None
-	credentials = get_credentials(user)
+	credentials = get_auth_cred_obj(user)
 	if not credentials or credentials.invalid:
 		# get credentials
 		frappe.throw("Invalid Credentials")
@@ -50,14 +58,9 @@ def get_rule_dict(recurring_rule):
 	
 	return rule_dict
 
-def get_gd_client(user):
-	import atom.data
-	import gdata.data
-	import gdata.contacts.client
-	import gdata.contacts.data
-	
+def get_gd_client(user):	
 	gd_client = gdata.contacts.client.ContactsClient(source='Google Integration')
-	cred = get_credentials(user)
+	cred = get_auth_cred_obj(user)
 	auth = gdata.gauth.OAuth2TokenFromCredentials(cred)
 	gd_client = auth.authorize(gd_client)
 	return gd_client

@@ -6,8 +6,8 @@ import gdata.contacts.client
 import gdata.contacts.data
 from frappe.utils import cint, get_datetime
 from dateutil.relativedelta import relativedelta
-from google_integration.utils import get_credentials, get_service_object, get_rule_dict, get_gd_client,\
- sync_activated
+from google_integration.utils import (get_auth_cred_obj, get_service_object, get_rule_dict, 
+	get_gd_client, sync_activated)
 
 def create_or_update_contact(doc, method):
 	"""triggered by hook on update of contact"""
